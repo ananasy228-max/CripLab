@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крипто-инструменты</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            background-color: #000;
+            color: #d0d0d0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            display: block;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            z-index: 1;
+            animation: fadeIn 1s ease;
+        }
+
+        h1 {
+            font-weight: 400;
+            font-size: 2rem;
+            border-bottom: 2px solid #2a7a2a;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            color: #b0ffb0;
+            letter-spacing: -0.5px;
+        }
+
+        .section {
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid #2a7a2a;
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: box-shadow 0.3s;
+        }
+
+        .section:hover {
+            box-shadow: 0 0 20px rgba(0, 100, 0, 0.3);
+        }
+
+        .section h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 400;
+            color: #b0ffb0;
+            font-size: 1.6rem;
+            border-left: 4px solid #2a7a2a;
+            padding-left: 15px;
+        }
+
+        label {
+            display: inline-block;
+            width: 160px;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input, select, textarea {
+            width: calc(100% - 170px);
+            padding: 10px 12px;
+            margin-bottom: 20px;
+            background-color: #111;
+            border: 1px solid #2a7a2a;
+            color: #b0ffb0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #3c9;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: #111;
+            color: #b0ffb0;
+            border: 2px solid #2a7a2a;
+            padding: 12px 28px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        button:hover {
+            background-color: #2a7a2a;
+            color: #000;
+            border-color: #3c9;
+        }
+
+        .result {
+            background-color: #0a0a0a;
+            border: 1px solid #2a7a2a;
+            padding: 15px;
+            margin-top: 20px;
+            color: #b0ffb0;
+            word-break: break-all;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            min-height: 70px;
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        .note {
+            font-size: 0.8rem;
+            color: #6a6a6a;
+            margin-top: 8px;
+            border-top: 1px dashed #2a7a2a;
+            padding-top: 8px;
+        }
+
+        .inline-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .inline-group label {
+            width: auto;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin: 0 5px 0 0;
+            transform: scale(1.2);
+            accent-color: #3c9;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #2a7a2a;
+            margin: 25px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 700px) {
+            label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            input, select, textarea {
+                width: 100%;
+            }
+            button {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    <div class="overlay"></div>
+
+    <div class="container">
+        <h1>КРИПТО-ИНСТРУМЕНТЫ</h1>
+
+        <!-- Генерация ключа AES -->
+        <div class="section">
+            <h2>ГЕНЕРАЦИЯ КЛЮЧА AES-256</h2>
+            <button onclick="generateKey()">Сгенерировать ключ (base64)</button>
+            <div id="keyResult" class="result"></div>
+            <div class="note">Ключ 32 байта в формате base64. Сохраните его для шифрования/дешифрования.</div>
+        </div>
+
+        <!-- AES-256-CBC Шифрование -->
+        <div class="section">
+            <h2>AES-256-CBC ШИФРОВАНИЕ</h2>
+            <label>Ключ (base64):</label>
+            <input type="text" id="aesKeyEncrypt" placeholder="base64 ключ"><br>
+            <label>Текст:</label>
+            <textarea id="plaintext" placeholder="Текст для шифрования"></textarea><br>
+            <button onclick="encryptAES()">Зашифровать</button>
+            <div id="encryptResult" class="result"></div>
+        </div>
+
+        <!-- AES-256-CBC Дешифрование -->
+        <div class="section">
+            <h2>AES-256-CBC ДЕШИФРОВАНИЕ</h2>
+            <label>Ключ (base64):</label>
+            <input type="text" id="aesKeyDecrypt" placeholder="base64 ключ"><br>
+            <label>IV (base64):</label>
+            <input type="text" id="iv" placeholder="iv base64"><br>
+            <label>Шифротекст (base64):</label>
+            <textarea id="ciphertext" placeholder="ciphertext base64"></textarea><br>
+            <button onclick="decryptAES()">Расшифровать</button>
+            <div id="decryptResult" class="result"></div>
+        </div>
+
+        <!-- Хэш-функции -->
+        <div class="section">
+            <h2>ХЭШ-ФУНКЦИИ (SHA‑256 / MD5)</h2>
+            <label>Текст:</label>
+            <input type="text" id="hashText" placeholder="текст"><br>
+            <label>Алгоритм:</label>
+            <select id="hashAlgo">
+                <option value="sha256">SHA-256</option>
+                <option value="md5">MD5</option>
+            </select><br>
+            <button onclick="computeHash()">Вычислить хэш</button>
+            <div id="hashResult" class="result"></div>
+        </div>
+
+        <!-- Base64 -->
+        <div class="section">
+            <h2>BASE64 КОДИРОВАНИЕ/ДЕКОДИРОВАНИЕ</h2>
+            <label>Текст:</label>
+            <input type="text" id="b64Text" placeholder="текст"><br>
+            <label>Действие:</label>
+            <select id="b64Action">
+                <option value="encode">Кодировать (encode)</option>
+                <option value="decode">Декодировать (decode)</option>
+            </select><br>
+            <button onclick="handleBase64()">Выполнить</button>
+            <div id="b64Result" class="result"></div>
+        </div>
+
+        <!-- Генерация пароля -->
+        <div class="section">
+            <h2>ГЕНЕРАЦИЯ КРИПТОСТОЙКОГО ПАРОЛЯ</h2>
+            <div class="inline-group">
+                <label>Длина:</label>
+                <input type="number" id="pwdLength" value="16" min="4" style="width:80px;">
+            </div>
+            <div class="inline-group">
+                <label>Цифры:</label>
+                <input type="checkbox" id="pwdDigits" checked>
+            </div>
+            <div class="inline-group">
+                <label>Спецсимволы:</label>
+                <input type="checkbox" id="pwdPunct" checked>
+            </div>
+            <button onclick="generatePassword()">Сгенерировать пароль</button>
+            <div id="pwdResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Матричный фон ---
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let columns, drops = [];
+        const fontSize = 16;
+        const chars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+
+        function initMatrix() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            columns = Math.floor(width / fontSize);
+            drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.floor(Math.random() * -height);
+            }
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.fillStyle = '#2a7a2a';
+            ctx.font = fontSize + 'px "Fira Code", "Courier New", monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+            requestAnimationFrame(drawMatrix);
+        }
+
+        window.addEventListener('resize', () => {
+            initMatrix();
+        });
+
+        initMatrix();
+        drawMatrix();
+
+        // --- Эффект посимвольного вывода с перебором ---
+        // Для каждого блока результата храним свои таймеры
+        const resultElements = {
+            keyResult: null,
+            encryptResult: null,
+            decryptResult: null,
+            hashResult: null,
+            b64Result: null,
+            pwdResult: null
+        };
+
+        function clearScramble(element) {
+            if (element._scrambleTimeouts) {
+                element._scrambleTimeouts.forEach(clearTimeout);
+                element._scrambleTimeouts = [];
+            }
+        }
+
+        function scrambleReveal(element, finalText, speed = 30) {
+            if (!element) return;
+            clearScramble(element);
+
+            const chars = '!@#$%^&*()_+{}:"<>?~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            const len = finalText.length;
+            let displayed = new Array(len).fill(' ');
+            element.textContent = '';
+
+            const timeouts = [];
+            element._scrambleTimeouts = timeouts;
+
+            // Функция обновления отображения
+            function render() {
+                element.textContent = displayed.join('');
+            }
+
+            // Для каждой позиции
+            for (let i = 0; i < len; i++) {
+                let iterations = 0;
+                const maxIter = 6; // количество случайных символов перед финальным
+
+                function step() {
+                    if (iterations < maxIter) {
+                        displayed[i] = chars[Math.floor(Math.random() * chars.length)];
+                        render();
+                        iterations++;
+                        const t = setTimeout(step, speed);
+                        timeouts.push(t);
+                    } else {
+                        displayed[i] = finalText[i];
+                        render();
+                    }
+                }
+
+                // Запускаем с задержкой, чтобы символы появлялись последовательно
+                const startDelay = i * speed * 2;
+                const t = setTimeout(step, startDelay);
+                timeouts.push(t);
+            }
+
+            // Финальная очистка на случай, если какой-то символ не завершился
+            const finalTimeout = setTimeout(() => {
+                element.textContent = finalText;
+                clearScramble(element);
+            }, len * speed * 8 + 1000);
+            timeouts.push(finalTimeout);
+        }
+
+        // --- API взаимодействие ---
+        const API_BASE = '/api';
+
+        async function apiPost(endpoint, data) {
+            const response = await fetch(`${API_BASE}${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            return await response.json();
+        }
+
+        function setResult(elementId, text, isError = false) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (isError) {
+                // Ошибки выводим сразу красным, без анимации
+                clearScramble(el);
+                el.innerHTML = `<span class="error">${text}</span>`;
+            } else {
+                // Запускаем красивый вывод
+                scrambleReveal(el, text);
+            }
+        }
+
+        async function generateKey() {
+            const response = await fetch('/api/generate-key');
+            const data = await response.json();
+            setResult('keyResult', `Сгенерированный ключ (base64): ${data.key_b64}`);
+        }
+
+        async function encryptAES() {
+            const key = document.getElementById('aesKeyEncrypt').value.trim();
+            const plaintext = document.getElementById('plaintext').value.trim();
+            if (!key || !plaintext) {
+                alert('Заполните ключ и текст');
+                return;
+            }
+            const data = { key_b64: key, plaintext };
+            const result = await apiPost('/aes/encrypt', data);
+            if (result.error) {
+                setResult('encryptResult', `Ошибка: ${result.error}`, true);
+            } else {
+                const text = `IV (base64): ${result.iv}\nШифротекст (base64): ${result.ciphertext}`;
+                setResult('encryptResult', text);
+            }
+        }
+
+        async function decryptAES() {
+            const key = document.getElementById('aesKeyDecrypt').value.trim();
+            const iv = document.getElementById('iv').value.trim();
+            const ct = document.getElementById('ciphertext').value.trim();
+            if (!key || !iv || !ct) {
+                alert('Заполните ключ, IV и шифротекст');
+                return;
+            }
+            const data = { key_b64: key, iv_b64: iv, ciphertext_b64: ct };
+            const result = await apiPost('/aes/decrypt', data);
+            if (result.error) {
+                setResult('decryptResult', `Ошибка: ${result.error}`, true);
+            } else {
+                setResult('decryptResult', `Расшифровано: ${result.plaintext}`);
+            }
+        }
+
+        async function computeHash() {
+            const text = document.getElementById('hashText').value.trim();
+            const algo = document.getElementById('hashAlgo').value;
+            if (!text) {
+                alert('Введите текст');
+                return;
+            }
+            const data = { text, algorithm: algo };
+            const result = await apiPost('/hash', data);
+            if (result.error) {
+                setResult('hashResult', `Ошибка: ${result.error}`, true);
+            } else {
+                setResult('hashResult', `${algo.toUpperCase()}: ${result.hash}`);
+            }
+        }
+
+        async function handleBase64() {
+            const text = document.getElementById('b64Text').value.trim();
+            const action = document.getElementById('b64Action').value;
+            if (!text) {
+                alert('Введите текст');
+                return;
+            }
+            const data = { text, action };
+            const result = await apiPost('/base64', data);
+            if (result.error) {
+                setResult('b64Result', `Ошибка: ${result.error}`, true);
+            } else {
+                setResult('b64Result', `Результат: ${result.result}`);
+            }
+        }
+
+        async function generatePassword() {
+            const length = parseInt(document.getElementById('pwdLength').value, 10);
+            const useDigits = document.getElementById('pwdDigits').checked;
+            const usePunct = document.getElementById('pwdPunct').checked;
+            const data = { length, use_digits: useDigits, use_punctuation: usePunct };
+            const result = await apiPost('/generate-password', data);
+            if (result.error) {
+                setResult('pwdResult', `Ошибка: ${result.error}`, true);
+            } else {
+                setResult('pwdResult', `Пароль: ${result.password}`);
+            }
+        }
+    </script>
+</body>
+</html>
