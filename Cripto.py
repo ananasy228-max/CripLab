@@ -108,4 +108,5 @@ if __name__ == "__main__":
     print('-'*60)
     proverka=base64_encode(original_text)
     print('Перевод в Base64 :', proverka)
+
     print('Из Base64 :',base64_decode(proverka))
