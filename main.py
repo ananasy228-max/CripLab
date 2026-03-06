@@ -1,12 +1,13 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 import base64
 from Crypto.Random import get_random_bytes
 
-# Импортируем функции
+# Импорт ваших функций
 from cripta_protokol import (
     aes_encrypt_CBC, aes_decrypt_CBC,
     sha256_hash, md5_hash,
@@ -16,10 +17,13 @@ from cripta_protokol import (
 
 app = FastAPI(title="Крипто-инструменты")
 
-# Настройка шаблонов (папка templates)
+# Монтируем статические файлы
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Шаблоны
 templates = Jinja2Templates(directory="templates")
 
-# Модели для запросов (для автоматической валидации)
+# Модели для запросов
 class AESEncryptRequest(BaseModel):
     key_b64: str
     plaintext: str
@@ -94,7 +98,6 @@ async def api_generate_password(req: PasswordRequest):
     password = generate_password(req.length, req.use_digits, req.use_punctuation)
     return {"password": password}
 
-# Вспомогательный эндпоинт для генерации случайного ключа AES
 @app.get("/api/generate-key")
 async def generate_key():
     key = get_random_bytes(32)
